@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web NFC Demo</title>
+</head>
+<body>
+  <h1>Web NFC Demo</h1>
+  <button id="scan">Scan NFC Tag</button>
+  <button id="write">Write to NFC Tag</button>
+  <pre id="output"></pre>
+
+  <script>
+    const output = document.getElementById("output");
+
+    function log(msg) {
+      output.textContent += msg + "\n";
+    }
+
+    if ("NDEFReader" in window) {
+      const ndef = new NDEFReader();
+
+      // Scan button
+      document.getElementById("scan").addEventListener("click", async () => {
+        try {
+          await ndef.scan();
+          alert("✅ Scan started successfully. Tap an NFC tag...");
+          ndef.onreading = event => {
+            alert("📡 NFC tag detected!");
+            const message = event.message;
+            for (const record of message.records) {
+              alert(`Record type: ${record.recordType}`);
+              alert(`Media type: ${record.mediaType}`);
+              alert(`Data: ${record.data ? record.data : "N/A"}`);
+            }
+          };
+        } catch (error) {
+          alert("❌ Error starting scan: " + error);
+        }
+      });
+
+      // Write button
+      document.getElementById("write").addEventListener("click", async () => {
+        try {
+          await ndef.write("Hello from Web NFC - Ganesh!");
+          alert("✅ Message written to NFC tag.");
+        } catch (error) {
+          alert("❌ Write failed: " + error);
+        }
+      });
+
+    } else {
+      alert("❌ Web NFC not supported on this device/browser.");
+    }
+  </script>
+</body>
+</html>
