@@ -3,15 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <title>Web NFC Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    button {
+      margin: 0.5rem 0.25rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #messageInput {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 300px;
+      margin-bottom: 1rem;
+    }
+    pre {
+      background: #222;
+      color: #0f0;
+      padding: 1rem;
+      border-radius: 5px;
+      margin-top: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
 </head>
 <body>
-  <h1>Web NFC Demo</h1>
+  <h1>📱 Web NFC Demo</h1>
+
+  <input id="messageInput" type="text" placeholder="Enter custom message" />
+  <br>
   <button id="scan">Scan NFC Tag</button>
   <button id="write">Write to NFC Tag</button>
+
   <pre id="output"></pre>
 
   <script>
     const output = document.getElementById("output");
+    const messageInput = document.getElementById("messageInput");
 
     function log(msg) {
       output.textContent += msg + "\n";
@@ -24,33 +57,40 @@
       document.getElementById("scan").addEventListener("click", async () => {
         try {
           await ndef.scan();
-          alert("✅ Scan started successfully. Tap an NFC tag...");
+          log("✅ Scan started. Tap an NFC tag...");
           ndef.onreading = event => {
-            alert("📡 NFC tag detected!");
+            log("📡 NFC tag detected!");
             const message = event.message;
             for (const record of message.records) {
-              alert(`Record type: ${record.recordType}`);
-              alert(`Media type: ${record.mediaType}`);
-              alert(`Data: ${record.data ? record.data : "N/A"}`);
+              log(`Record type: ${record.recordType}`);
+              log(`Media type: ${record.mediaType}`);
+              // Decode text records if present
+              if (record.recordType === "text") {
+                const textDecoder = new TextDecoder(record.encoding);
+                log(`Data: ${textDecoder.decode(record.data)}`);
+              } else {
+                log(`Data: ${record.data ? record.data : "N/A"}`);
+              }
             }
           };
         } catch (error) {
-          alert("❌ Error starting scan: " + error);
+          log("❌ Error starting scan: " + error);
         }
       });
 
       // Write button
       document.getElementById("write").addEventListener("click", async () => {
         try {
-          await ndef.write("Hello from Web NFC - Ganesh!");
-          alert("✅ Message written to NFC tag.");
+          const text = messageInput.value || "Default message from Web NFC";
+          await ndef.write({ records: [{ recordType: "text", data: text }] });
+          log("✅ Message written to NFC tag: " + text);
         } catch (error) {
-          alert("❌ Write failed: " + error);
+          log("❌ Write failed: " + error);
         }
       });
 
     } else {
-      alert("❌ Web NFC not supported on this device/browser.");
+      log("❌ Web NFC not supported on this device/browser.");
     }
   </script>
 </body>
